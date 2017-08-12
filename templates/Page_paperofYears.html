@@ -12,6 +12,8 @@
     var myChart = echarts.init(document.getElementById('chart'));
     var esi = {{ esi | safe }};
     var totalCount = {{ totalcount | safe }};
+
+    console.log(totalCount)
     var refCount = {{ refcount | safe }};
     window.onresize = myChart.resize;
     var topOption = {
