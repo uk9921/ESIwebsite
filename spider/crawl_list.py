@@ -41,25 +41,27 @@ class ESIspider():
             driver.maximize_window()
             driver.get(ESIspider.LibDbUrl)
             try:
-                elment = WebDriverWait(driver, 10).until(
+                WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, '客户反馈和技术支持')))
             finally:
                 # 数据库选择WOS集
-                driver.find_element_by_id('collectionDropdown').click()
-                driver.find_element_by_css_selector("[title='检索 Web of Science 核心合集']").click()
+                driver.find_element_by_css_selector("[role='presentation']").click()
+                driver.find_element_by_xpath('//*[@id="select2-select-results"]/li[2]').click()
                 try:
                     print('Filling in the form...')
-                    elment = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, '核心合集')))
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.ID, 'WOS_GeneralSearch_input_form_sb')))
                 finally:
                     pass
                 driver.save_screenshot('seleniumlog/WOSdb.png')
                 # 选择机构扩展
-                select = driver.find_element_by_class_name('select2-choice').click()
-                driver.find_element_by_id('select2-result-label-24').click()
-
+                driver.find_elements_by_class_name('select2-selection__arrow')[1].click()
+                inputbox = driver.find_element_by_class_name('select2-search__field')
+                inputbox.send_keys(u'机构扩展')
+                inputbox.send_keys(Keys.ENTER)
                 print ('Sleeping 1s...')
                 time.sleep(1)
+                driver.save_screenshot('seleniumlog/fixinput.png')
                 # 填写武汉科技大学
                 input1 = driver.find_element_by_id('value(input1)')
                 input1.send_keys(Keys.TAB)
@@ -71,7 +73,7 @@ class ESIspider():
                 # 提交
                 driver.find_element_by_id('WOS_GeneralSearch_input_form_sb').click()
                 try:
-                    elment = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'selectSortBy_.top')))
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'selectSortBy_.top')))
                     driver.save_screenshot('seleniumlog/firstSub.png')
                 finally:
                     '''
@@ -81,38 +83,39 @@ class ESIspider():
                     print ('Searching article and review...')
                     driver.find_element_by_id('DocumentType_1').click()
                     driver.find_element_by_id('DocumentType_3').click()
-
                     # 第二位为精炼
-                    driver.find_elements_by_xpath("//a[contains(.,'精炼')]")[2].click()
+                    driver.find_element_by_xpath(' // *[ @ id = "DocumentType_tr"] / div[3] / a').click()
                     try:
-                        elment = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.ID, 's2id_selectSortBy_.top')))
+                        WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.ID, 'select2-selectSortBy_top-container')))
                         driver.save_screenshot('seleniumlog/article_review.png')
                     finally:
                         pass
                     #记录数
                     ESIspider.hitCount = int(filter(str.isdigit, driver.find_element_by_id('hitCount.top').text.encode('utf-8')))
+                    print(ESIspider.hitCount)
                     # 排序
                     print ('Sorting the list...')
-                    driver.find_elements_by_class_name('select2-choice')[0].click()
-                    driver.find_elements_by_xpath("//div[contains(.,'被引频次 (降序)')]")[-1].click()
+                    driver.find_element_by_id('select2-selectSortBy_top-container').click()
+                    driver.find_element_by_xpath('//*[@id="select2-selectSortBy_top-results"]/li[4]').click()
                     try:
                         elment = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.ID, 's2id_selectPageSize_.bottom')))
+                            EC.presence_of_element_located((By.ID, 'select2-selectSortBy_top-container')))
                         driver.save_screenshot('seleniumlog/sort.png')
                     finally:
                         pass
                     print ('50 pages per page are being selected...')
                     # 每页50条
-                    driver.find_elements_by_class_name('select2-choice')[4].click()
-                    driver.find_elements_by_xpath("//div[contains(.,'每页 50 条')]")[-1].click()
+                    driver.find_element_by_id('select2-selectPageSize_bottom-container').click()
+                    driver.find_element_by_xpath('//*[@id="select2-selectPageSize_bottom-results"]/li[3]').click()
                     try:
-                        elment = WebDriverWait(driver, 10).until(
+                        WebDriverWait(driver, 10).until(
                             EC.presence_of_element_located((By.CLASS_NAME, 'smallV110')))
                         driver.save_screenshot('seleniumlog/50_perpage.png')
                     finally:
                         ESIspider.URL = driver.current_url
                         ESIspider.SID = re.findall(r"SID=(.+?)&", ESIspider.URL)[0]
+                        print ('SID is:'+ESIspider.SID)
                         print ('Initialize successfully!')
         except:
             driver.quit()
@@ -411,5 +414,5 @@ class ESIspider():
 
         esi.get_item()
 esi = ESIspider()
-esi.get_item()
+# esi.get_item()
 print ('Done')

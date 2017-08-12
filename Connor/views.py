@@ -54,7 +54,7 @@ def MenuFrame(request):
 # 主界面左侧展开收起控制器
 def pushRLFrame(request):
     if request.session.get('username', None):
-        return render(request, "pushFrame.html")
+        return render(request, "pushRLFrame.html")
     else:
         return render(request, "login.html", {"message": "走正门"})
 
@@ -255,15 +255,16 @@ def Page_yygx(request):
     import time
     thisyear = int(time.strftime('%Y', time.localtime(time.time())))
     year = [x for x in range(thisyear - 10, thisyear + 1)]
+    paper_pair = []
     if request.method == "POST":
-        paper_pair = []
         searchYear = request.POST.get('selyear', None)
-        paper_list = models.Dissertation.objects.values("TITLE").filter(DATE__contains=searchYear)[:10]
-        for paper in paper_list:
-            refer = models.refer.objects.filter(TITLE__contains=paper['TITLE'])
-            paper_pair.append(refer)
-        return render(request, "Page_yygx.html", {"year": year, "paper_pair": paper_pair})
-    return render(request, "Page_yygx.html", {"year": year})
+    else:
+        searchYear = thisyear-10
+    paper_list = models.Dissertation.objects.values("TITLE").filter(DATE__contains=searchYear)[:10]
+    for paper in paper_list:
+        refer = models.refer.objects.filter(TITLE__contains=paper['TITLE'])
+        paper_pair.append(refer)
+    return render(request, "Page_yygx.html", {"year": year, "paper_pair": paper_pair})
 
 def Page_ComputerScience(request):
     if request.session.get('username', None):
