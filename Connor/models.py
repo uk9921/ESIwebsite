@@ -36,3 +36,9 @@ class Dissertation(models.Model):
 class refer(models.Model):
     TITLE = models.CharField(max_length=500, null=True)
     REFERENCE_TITLE = models.CharField(max_length=500, null=True)
+
+class journals(models.Model):
+    TITLE = models.CharField(max_length=500, null=True)
+    TITLE29 = models.CharField(max_length=300, null=True)
+    TITLE20 = models.CharField(max_length=300, null=True)
+    CATE = models.CharField(max_length=500, null=True)

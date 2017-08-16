@@ -27,5 +27,6 @@ urlpatterns = [
     url(r'^PageFrame', views.PageFrame),
     url(r'^Page_lwtj',views.Page_lwtj),
     url(r'spiderSen',views.spiderSen),
-    url(r'Page_paperofYears',views.Page_paperofYears)
+    url(r'Page_paperofYears',views.Page_paperofYears),
+    url(r'Page_journalsImport', views.Page_journalsImport)
 ]

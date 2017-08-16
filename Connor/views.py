@@ -4,6 +4,11 @@ from Connor import models
 from django.http import HttpResponse
 import time
 import json
+import os
+import re
+import xlrd
+import sqlite3
+
 # Create your views here.
 
 # 登陆界面控制器
@@ -124,3 +129,50 @@ def Page_paperofYears(request):
                       'totalcount': json.dumps(total_count),
                       'esi': json.dumps(esi_statistics)
                   })
+
+#上传Excel文件并保存至static/journalsExcelFolder
+def Page_journalsImport(request):
+
+    if request.method == "POST":  # 请求方法为POST时，进行处理
+        myFile = request.FILES.get("excels", None)  # 获取上传的文件，如果没有文件，则默认为None
+        if not myFile:
+            return HttpResponse("no files for upload!")
+        destination = open(os.path.join(".\static\journalsExcelFolder", myFile.name), 'wb+')  # 打开特定的文件进行二进制的写操作
+        for chunk in myFile.chunks():  # 分块写入文件
+            destination.write(chunk)
+        destination.close()
+        JournalsDBAppend()
+        return HttpResponse("上传成功")
+
+    return render(request,"Page_journalsImport.html")
+
+#解析Excel数据存入数据库
+def JournalsDBAppend():
+
+    excelpath = ".\static\journalsExcelFolder\\test1.xlsx"
+    workbook = xlrd.open_workbook(excelpath)
+    booksheet = workbook.sheet_by_index(0)
+
+    conn = sqlite3.connect('.\\db.sqlite3')
+    c = conn.cursor()
+    #
+    deleteSql = """delete from Connor_journals"""
+    c.execute(deleteSql)
+
+
+    for row in range(booksheet.nrows):
+        row_data = []
+        for col in range(booksheet.ncols):
+            cel = booksheet.cell(row, col)
+            val = cel.value
+            val = str(val)
+            row_data.append(val)
+        title = row_data[0]
+        title29 = row_data[1]
+        title20 = row_data[2]
+        cate = row_data[5]
+        c.execute("insert into Connor_journals (TITLE,TITLE29,TITLE20,CATE) values (?, ?, ?, ?)",
+                  (title, title29, title20, cate))
+
+    conn.commit()
+    conn.close()
