@@ -134,13 +134,16 @@ def Page_paperofYears(request):
 def Page_journalsImport(request):
 
     if request.method == "POST":  # 请求方法为POST时，进行处理
-        myFile = request.FILES.get("excels", None)  # 获取上传的文件，如果没有文件，则默认为None
-        if not myFile:
+        files = request.FILES.getlist("excels", None)
+        if not files:
             return HttpResponse("no files for upload!")
-        destination = open(os.path.join(".\static\journalsExcelFolder", myFile.name), 'wb+')  # 打开特定的文件进行二进制的写操作
-        for chunk in myFile.chunks():  # 分块写入文件
-            destination.write(chunk)
-        destination.close()
+
+        for f in files:
+            destination = open(os.path.join(".\static\journalsExcelFolder", f.name), 'wb+')
+            for chunk in f.chunks():
+                destination.write(chunk)
+            destination.close()
+
         JournalsDBAppend()
         return HttpResponse("上传成功")
 
@@ -149,30 +152,41 @@ def Page_journalsImport(request):
 #解析Excel数据存入数据库
 def JournalsDBAppend():
 
-    excelpath = ".\static\journalsExcelFolder\\test1.xlsx"
-    workbook = xlrd.open_workbook(excelpath)
-    booksheet = workbook.sheet_by_index(0)
+    excelfolderpath = ".\static\journalsExcelFolder\\"
 
-    conn = sqlite3.connect('.\\db.sqlite3')
+    conn = sqlite3.connect('.\db.sqlite3')
     c = conn.cursor()
-    #
+
     deleteSql = """delete from Connor_journals"""
     c.execute(deleteSql)
 
+    pathDir = os.listdir(excelfolderpath)
 
-    for row in range(booksheet.nrows):
-        row_data = []
-        for col in range(booksheet.ncols):
-            cel = booksheet.cell(row, col)
-            val = cel.value
-            val = str(val)
-            row_data.append(val)
-        title = row_data[0]
-        title29 = row_data[1]
-        title20 = row_data[2]
-        cate = row_data[5]
-        c.execute("insert into Connor_journals (TITLE,TITLE29,TITLE20,CATE) values (?, ?, ?, ?)",
-                  (title, title29, title20, cate))
+    for allDir in pathDir:
+        child = os.path.join(allDir)
+        excelpath = excelfolderpath+child
+        workbook = xlrd.open_workbook(excelpath)
+        booksheet = workbook.sheet_by_index(0)
 
-    conn.commit()
+        for row in range(1,booksheet.nrows):
+            row_data = []
+            for col in range(booksheet.ncols):
+                cel = booksheet.cell(row, col)
+                val = cel.value
+                val = str(val)
+                row_data.append(val)
+            if booksheet.nrows == 5:
+                title = row_data[0]
+                title29 = row_data[0]
+                title20 = row_data[1]
+                cate = row_data[4]
+            else:
+                title = row_data[0]
+                title29 = row_data[1]
+                title20 = row_data[2]
+                cate = row_data[5]
+            c.execute("insert into Connor_journals (TITLE,TITLE29,TITLE20,CATE) values (?, ?, ?, ?)",
+                      (title, title29, title20, cate))
+            conn.commit()
+
     conn.close()
