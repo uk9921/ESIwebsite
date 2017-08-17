@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+    <meta charset="UTF-8">
+    <title>年度论文发表数</title>
+    <script src="http://echarts.baidu.com/dist/echarts.common.min.js"></script>
+    <script src="../static/js/FileSaver.min.js"></script>
+</head>
+<body style="height: 100%;">
+<div id="chart" style="left: 10%; width: 80%;height: 100%;"></div>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('chart'));
+    var esi = {{ esi | safe }};
+    var totalCount = {{ totalcount | safe }};
+    var refCount = {{ refcount | safe }};
+    window.onresize = myChart.resize;
+    var topOption = {
+        title: {
+            text: '年度发表论文'
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function (params) {
+                var content = params[0].name + '<br />';
+
+                params.map(function (series) {
+                    content += series.marker + ' ' + series.seriesName + ': ' + Math.abs(series.value) + '<br />';
+                });
+
+                return content;
+            }
+        },
+        toolbox: {
+            show: true,
+            right: '5%',
+            feature: {
+                mySave: {
+                    show: true,
+                    title: '导出至Excel',
+                    icon: 'image://../static/imgs/save.png',
+                    onclick: function () {
+                        var fileContent = '年度发表论文' + '\n';
+                        fileContent += '年份,论文篇数,被引次数' + '\n';
+                        Object.keys(totalCount).map(function (year) {
+                            fileContent += year + ',' + Math.abs(totalCount[year]) + ',' + refCount[year] + '\n';
+                        });
+
+                        var file = new File([fileContent], '年度发表论文.csv', {type: "text/plain;charset=utf-8"});
+                        saveAs(file);
+                    }
+                },
+                magicType: {type: ['line', 'bar']},
+                saveAsImage: {}
+            }
+        },
+        legend: {
+            data: ['论文篇数（篇）', '被引次数（次）']
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: [
+            {
+                show: false
+            }
+        ],
+        yAxis: [
+            {
+                type: 'category',
+                axisTick: {show: false},
+                axisLabel: {
+                    formatter: '{value} 年'
+                },
+                data: Object.keys(totalCount)
+            }
+        ],
+        animationDelay: function (idx) {
+            return 700 - idx * 70;
+        },
+        itemStyle: {
+            normal: {
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.6)'
+            }
+        },
+        series: [
+            {
+                name: '论文篇数（篇）',
+                type: 'bar',
+                stack: '总量',
+                itemStyle: {
+                    normal: {
+                        color: '#6c95c4'
+                    }
+                },
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'left',
+                        formatter: function (params) {
+                            return Math.abs(params.data);
+                        }
+                    }
+                },
+                data: Object.values(totalCount)
+            },
+            {
+                name: '被引次数（次）',
+                type: 'bar',
+                stack: '总量',
+                itemStyle: {
+                    normal: {
+                        color: '#eea966'
+                    }
+                },
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'right'
+                    }
+                },
+                data: Object.values(refCount)
+            }
+        ]
+    };
+
+    myChart.setOption(topOption);
+    myChart.on('click', function(params) {
+        if(isNaN(params.name))
+            return;
+
+        var option = {
+            title: {
+            text: params.name + '年ESI分类统计'
+            },
+            tooltip : {
+                trigger: 'axis',
+                axisPointer : {
+                    type : 'shadow'
+                }
+            },
+            toolbox: {
+                show: true,
+                right: '5%',
+                feature: {
+                    myRestore: {
+                        show: true,
+                        title: '返回',
+                        icon: 'image://../static/imgs/return.png',
+                        onclick: function (){
+                            myChart.clear();
+                            myChart.setOption(topOption, true);
+                        }
+                    },
+                    mySave: {
+                        show: true,
+                        title: '导出至Excel',
+                        icon: 'image://../static/imgs/save.png',
+                        onclick: function() {
+                            var fileContent = params.name + '年ESI分类统计' + '\n';
+                            Object.keys(esi[params.name]).map(function(key) {
+                                fileContent += key + ',' + esi[params.name][key] + '\n';
+                            });
+
+                            var file = new File([fileContent], params.name + '年ESI分类统计.csv', {type: "text/plain;charset=utf-8"});
+                            saveAs(file);
+                        }
+                    },
+                    magicType: {type: ['line', 'bar']},
+                    saveAsImage: {}
+                }
+            },
+            legend: {
+                data:['论文篇数（篇）']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis : [
+                {
+                    show: false
+                }
+            ],
+            yAxis : [
+                {
+                    type : 'category',
+                    axisTick : {show: false},
+                    data : Object.keys(esi[params.name])
+                }
+            ],
+            animationDelay: function (idx) {
+                return 700 - idx * 70;
+            },
+            itemStyle: {
+                normal: {
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(0, 0, 0, 0.6)'
+                }
+            },
+            series : [
+                {
+                    name:'论文篇数（篇）',
+                    type:'bar',
+                    stack: '总量',
+                    itemStyle: {
+                        normal: {
+                            color: '#6c95c4'
+                        }
+                    },
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'right'
+                        }
+                    },
+                    data: Object.values(esi[params.name])
+                }
+            ]
+        };
+        myChart.clear();
+        myChart.setOption(option, true);
+
+    }.bind(this));
+</script>
+</body>
+</html>
