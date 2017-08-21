@@ -4,6 +4,9 @@ from Connor import models
 from django.http import HttpResponse
 import time
 import json
+import os
+import xlrd
+import sqlite3
 # Create your views here.
 
 # 登陆界面控制器
@@ -61,7 +64,7 @@ def pushRLFrame(request):
 # 主界面默认内容控制器
 def PageFrame(request):
     if request.session.get('username', None):
-        import tools
+        from Connor import tools
         import time
         startdata, enddata = tools.daterange()
         # 读取配置文件location.conf
@@ -111,10 +114,10 @@ def Page_lwzl(request):
       #在Dissertation数据库中模糊查询
       paper_list = models.Dissertation.objects.filter(TITLE__contains=title)
       #将变量paper_list放在data中并且返回到Page_lwzl.html中
-      print title
+      print(title)
       return render(request, "Page_lwzl.html", {"data": paper_list})
   #没收到POST请求则返回初始界面
-  print 1
+  print(1)
   return render(request, "Page_lwzl.html")
 
 #被引频次统计
@@ -288,3 +291,66 @@ def Page_ComputerScience(request):
         return render(request, "Page_ComputerScience.html", dict)
     else:
         return render(request, "login.html", {"message": "走正门"})
+
+
+#上传Excel文件并保存至static/journalsExcelFolder
+def Page_journalsImport(request):
+
+    if request.method == "POST":  # 请求方法为POST时，进行处理
+        files = request.FILES.getlist("excels", None)
+        if not files:
+            return HttpResponse("no files for upload!")
+
+        for f in files:
+            destination = open(os.path.join(".\static\journalsExcelFolder", f.name), 'wb+')
+            for chunk in f.chunks():
+                destination.write(chunk)
+            destination.close()
+
+        JournalsDBAppend()
+        return HttpResponse("上传成功")
+
+    return render(request,"Page_journalsImport.html")
+
+#解析Excel数据存入数据库
+def JournalsDBAppend():
+
+    excelfolderpath = ".\static\journalsExcelFolder\\"
+
+    conn = sqlite3.connect('.\db.sqlite3')
+    c = conn.cursor()
+
+    deleteSql = """delete from Connor_journals"""
+    c.execute(deleteSql)
+
+    pathDir = os.listdir(excelfolderpath)
+
+    for allDir in pathDir:
+        child = os.path.join(allDir)
+        excelpath = excelfolderpath+child
+        workbook = xlrd.open_workbook(excelpath)
+        booksheet = workbook.sheet_by_index(0)
+
+        for row in range(1,booksheet.nrows):
+            row_data = []
+            for col in range(booksheet.ncols):
+                cel = booksheet.cell(row, col)
+                val = cel.value
+                val = str(val)
+                row_data.append(val)
+            if booksheet.nrows == 5:
+                title = row_data[0]
+                title29 = row_data[0]
+                title20 = row_data[1]
+                cate = row_data[4]
+            else:
+                title = row_data[0]
+                title29 = row_data[1]
+                title20 = row_data[2]
+                cate = row_data[5]
+            c.execute("insert into Connor_journals (TITLE,TITLE29,TITLE20,CATE) values (?, ?, ?, ?)",
+                      (title, title29, title20, cate))
+            conn.commit()
+
+    conn.close()
+
