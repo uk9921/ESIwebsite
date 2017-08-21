@@ -49,3 +49,9 @@ class refercount(models.Model):
     #YYYY-MMM-DD RC1（Refer Count）,YYYY-MMM-DD RC2
     HISTORYRC = models.IntegerField(null=True)   # 被引频次（详细页面）
     HISTORYTRC = models.IntegerField(null=True)   # 总被引频次
+
+class journals(models.Model):
+    TITLE = models.CharField(max_length=500, null=True)
+    TITLE29 = models.CharField(max_length=300, null=True)
+    TITLE20 = models.CharField(max_length=300, null=True)
+    CATE = models.CharField(max_length=500, null=True)
