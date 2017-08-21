@@ -55,3 +55,8 @@ class journals(models.Model):
     TITLE29 = models.CharField(max_length=300, null=True)
     TITLE20 = models.CharField(max_length=300, null=True)
     CATE = models.CharField(max_length=500, null=True)
+
+class staffs(models.Model):
+    INSTITUTION = models.CharField(max_length=300, null=True)
+    STAFFNAME_CN = models.CharField(max_length=100, null=True)
+    STAFFNAME_EN = models.CharField(max_length=300, null=True)

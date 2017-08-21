@@ -293,7 +293,7 @@ def Page_ComputerScience(request):
         return render(request, "login.html", {"message": "走正门"})
 
 
-#上传Excel文件并保存至static/journalsExcelFolder
+#上传期刊Excel文件并保存至static/journalsExcelFolder
 def Page_journalsImport(request):
 
     if request.method == "POST":  # 请求方法为POST时，进行处理
@@ -311,8 +311,26 @@ def Page_journalsImport(request):
         return HttpResponse("上传成功")
 
     return render(request,"Page_journalsImport.html")
+#上传职工Excel文件并保存到static/staffsExcelFolder
+def Page_staffsImport(request):
 
-#解析Excel数据存入数据库
+    # if request.method == "POST":  # 请求方法为POST时，进行处理
+    #     files = request.FILES.getlist("excels", None)
+    #     if not files:
+    #         return HttpResponse("no files for upload!")
+    #
+    #     for f in files:
+    #         destination = open(os.path.join(".\static\staffsExcelFolder", f.name), 'wb+')
+    #         for chunk in f.chunks():
+    #             destination.write(chunk)
+    #         destination.close()
+    #
+    #     staffsDBAppend()
+    #     return HttpResponse("上传成功")
+
+    return render(request,"Page_staffsImport.html")
+
+#解析期刊Excel数据存入数据库
 def JournalsDBAppend():
 
     excelfolderpath = ".\static\journalsExcelFolder\\"
@@ -331,14 +349,14 @@ def JournalsDBAppend():
         workbook = xlrd.open_workbook(excelpath)
         booksheet = workbook.sheet_by_index(0)
 
-        for row in range(1,booksheet.nrows):
+        for row in range(1, booksheet.nrows):
             row_data = []
             for col in range(booksheet.ncols):
                 cel = booksheet.cell(row, col)
                 val = cel.value
                 val = str(val)
                 row_data.append(val)
-            if booksheet.nrows == 5:
+            if booksheet.ncols == 5:
                 title = row_data[0]
                 title29 = row_data[0]
                 title20 = row_data[1]
@@ -350,6 +368,41 @@ def JournalsDBAppend():
                 cate = row_data[5]
             c.execute("insert into Connor_journals (TITLE,TITLE29,TITLE20,CATE) values (?, ?, ?, ?)",
                       (title, title29, title20, cate))
+            conn.commit()
+
+    conn.close()
+
+#解析员工Excel导入数据库
+def staffsDBAppend():
+    excelfolderpath = ".\static\staffsExcelFolder\\"
+
+    conn = sqlite3.connect('.\db.sqlite3')
+    c = conn.cursor()
+
+    deleteSql = """delete from Connor_staffs"""
+    c.execute(deleteSql)
+
+    pathDir = os.listdir(excelfolderpath)
+
+    for allDir in pathDir:
+        child = os.path.join(allDir)
+        excelpath = excelfolderpath + child
+        workbook = xlrd.open_workbook(excelpath)
+        booksheet = workbook.sheet_by_index(0)
+
+        for row in range(1, booksheet.nrows):
+            row_data = []
+            for col in range(booksheet.ncols):
+                cel = booksheet.cell(row, col)
+                val = cel.value
+                val = str(val)
+                row_data.append(val)
+            institution = row_data[0]
+            staffname_cn = row_data[1]
+            staffname_en = row_data[2]
+
+            c.execute("insert into Connor_staffs (INSTITUTION, STAFFNAME_CN, STAFFNAME_EN) values (?, ?, ?)",
+                      (institution, staffname_cn, staffname_en))
             conn.commit()
 
     conn.close()
