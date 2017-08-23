@@ -34,6 +34,6 @@ urlpatterns = [
     url(r'^Page_ComputerScience', views.Page_ComputerScience),
     url(r'^Page_journalsImport', views.Page_journalsImport),
     url(r'^Page_staffsImport', views.Page_staffsImport),
-
+    url(r'^Page_journalsContribution', views.Page_journalsContribution),
 
 ]
