@@ -245,6 +245,14 @@ def Page_paperofYears(request):
     else:
         return render(request, "login.html", {"message": "走正门"})
 
+#二级单位论文贡献
+def Page_journalsContribution(request):
+    if request.session.get('username', None):
+
+        return render(request, "Page_journalsContribution.html")
+
+    else:
+        return render(request, "login.html", {"message": "走正门"})
 
 def Page_lwzl(request):
     if request.method == "POST":
@@ -296,37 +304,37 @@ def Page_ComputerScience(request):
 #上传期刊Excel文件并保存至static/journalsExcelFolder
 def Page_journalsImport(request):
 
-    if request.method == "POST":  # 请求方法为POST时，进行处理
-        files = request.FILES.getlist("excels", None)
-        if not files:
-            return HttpResponse("no files for upload!")
-
-        for f in files:
-            destination = open(os.path.join(".\static\journalsExcelFolder", f.name), 'wb+')
-            for chunk in f.chunks():
-                destination.write(chunk)
-            destination.close()
-
-        JournalsDBAppend()
-        return HttpResponse("上传成功")
-
-    return render(request,"Page_journalsImport.html")
-#上传职工Excel文件并保存到static/staffsExcelFolder
-def Page_staffsImport(request):
-
     # if request.method == "POST":  # 请求方法为POST时，进行处理
     #     files = request.FILES.getlist("excels", None)
     #     if not files:
     #         return HttpResponse("no files for upload!")
     #
     #     for f in files:
-    #         destination = open(os.path.join(".\static\staffsExcelFolder", f.name), 'wb+')
+    #         destination = open(os.path.join(".\static\journalsExcelFolder", f.name), 'wb+')
     #         for chunk in f.chunks():
     #             destination.write(chunk)
     #         destination.close()
     #
-    #     staffsDBAppend()
+    #     JournalsDBAppend()
     #     return HttpResponse("上传成功")
+
+    return render(request,"Page_journalsImport.html")
+#上传职工Excel文件并保存到static/staffsExcelFolder
+def Page_staffsImport(request):
+
+    if request.method == "POST":  # 请求方法为POST时，进行处理
+        files = request.FILES.getlist("excels", None)
+        if not files:
+            return HttpResponse("no files for upload!")
+
+        for f in files:
+            destination = open(os.path.join(".\static\staffsExcelFolder", f.name), 'wb+')
+            for chunk in f.chunks():
+                destination.write(chunk)
+            destination.close()
+
+        staffsDBAppend()
+        return HttpResponse("上传成功")
 
     return render(request,"Page_staffsImport.html")
 
